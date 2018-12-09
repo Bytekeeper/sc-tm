@@ -14,8 +14,10 @@ enum struct WinReason { Eliminated, Crash };
 enum struct Winner { Self, Enemy };
 #define WR WinReason::
 #define Wn Winner::
+#if _MSC_VER >= 1910
 #define _NOEXCEPT noexcept
-using SteadyClock = std::chrono::steady_clock;
+#endif
+using SteadyClock = std::chrono::high_resolution_clock;
 using TimePoint = std::chrono::time_point<SteadyClock>;
 using Duration = std::chrono::duration<float, std::milli>;
 using BWAPIPlayer = BWAPI::Player;
@@ -66,9 +68,12 @@ const std::string log_results_file = Envvar("TM_LOG_RESULTS");
 const std::string log_frametimes_file = Envvar("TM_LOG_FRAMETIMES");
 const bool allow_user_input = (Envvar("TM_ALLOW_USER_INPUT").compare("1") == 0);
 const int speed_override = std::atoi(Envvar("TM_SPEED_OVERRIDE").c_str());
+const int time_out_at_frame = std::atoi(Envvar("TM_TIME_OUT_AT_FRAME").c_str());
 
 struct TournamentModuleManager {
-  TournamentModuleManager() : win_reason(WR Crash), winner(Wn Enemy), num_actions(0), minerals_gathered(0), minerals_spent(0), gas_gathered(0), gas_spent(0) {
+  TournamentModuleManager() : win_reason(WR Crash), winner(Wn Enemy), num_actions(0), minerals_gathered(0), minerals_spent(0), gas_gathered(0), gas_spent(0), timed_out(false),
+	building_score(0), kill_score(0), razing_score(0), unit_score(0)
+  {
 
   }
 
@@ -128,10 +133,15 @@ struct TournamentModuleManager {
 
   void onEnd(bool didWin) {
     win_reason = WR Eliminated;
-    winner = didWin ? Wn Self : Wn Enemy;
+    winner = didWin && !timed_out ? Wn Self : Wn Enemy;
   }
 
   void onFrame() {
+	if (time_out_at_frame > 0 && BWAPI::Broodwar->getFrameCount() >= time_out_at_frame) {
+		timed_out = true;
+		BWAPI::Broodwar->leaveGame();
+		return;
+	}
     BWAPIPlayer const self = BWAPI::Broodwar->self();
 
     building_score = self->getBuildingScore();
@@ -148,8 +158,9 @@ struct TournamentModuleManager {
     }
     frameTimeSum += lastFrameDuration;
 
-    // Check executed actions
-    for(BWAPI::Unitset::iterator it = BWAPI::Broodwar->self()->getUnits().begin(); it != BWAPI::Broodwar->self()->getUnits().end(); ++ it) {
+#ifdef BWAPI4
+	// Check executed actions
+	for(BWAPI::Unitset::iterator it = BWAPI::Broodwar->self()->getUnits().begin(); it != BWAPI::Broodwar->self()->getUnits().end(); ++ it) {
       int id = (*it)->getID();
       std::map<int, BWAPI::Position>::const_iterator it2 = lastCommandPosition.find(id);
       if (it2 != lastCommandPosition.end()) {
@@ -163,7 +174,7 @@ struct TournamentModuleManager {
         lastCommandTarget[id] = (*it)->getTarget()->getID();
       lastCommandType[id] = (*it)->getOrder().getID();
     }
-
+#endif
     if (BWAPI::Broodwar->getFrameCount() % 20 == 19) {
       // Write game data to file
       frametimes
@@ -191,6 +202,7 @@ struct TournamentModuleManager {
 
   WinReason win_reason;
   Winner winner;
+  bool timed_out;
   int building_score;
   int kill_score;
   int razing_score;
