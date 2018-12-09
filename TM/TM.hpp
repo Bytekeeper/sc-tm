@@ -22,6 +22,7 @@ using TimePoint = std::chrono::time_point<SteadyClock>;
 using Duration = std::chrono::duration<float, std::milli>;
 using BWAPIPlayer = BWAPI::Player;
 using TournamentAction = BWAPI::Tournament::ActionID;
+using UnitSet = BWAPI::Unitset;
 #elif BWAPI3
 typedef enum { Eliminated, Crash } WinReason;
 typedef enum { Self, Enemy } Winner;
@@ -33,6 +34,7 @@ typedef boost::chrono::time_point<SteadyClock> TimePoint;
 typedef boost::chrono::duration<float, boost::milli> Duration;
 typedef BWAPI::Player *BWAPIPlayer;
 typedef int TournamentAction;
+typedef std::set<BWAPI::Unit*> UnitSet;
 #endif
 
 struct TournamentModuleManager;
@@ -123,7 +125,8 @@ struct TournamentModuleManager {
       of << "{\n";
       PrintVar(of, "is_winner", BoolName(winner == Wn Self), ",");
       PrintVar(of, "is_crashed", BoolName(win_reason == WR Crash), ",");
-      PrintVar(of, "building_score", building_score, ",");
+	  PrintVar(of, "timed_out", BoolName(timed_out), ",");
+	  PrintVar(of, "building_score", building_score, ",");
       PrintVar(of, "kill_score", kill_score, ",");
       PrintVar(of, "razing_score", razing_score, ",");
       PrintVar(of, "unit_score", unit_score);
@@ -158,9 +161,8 @@ struct TournamentModuleManager {
     }
     frameTimeSum += lastFrameDuration;
 
-#ifdef BWAPI4
 	// Check executed actions
-	for(BWAPI::Unitset::iterator it = BWAPI::Broodwar->self()->getUnits().begin(); it != BWAPI::Broodwar->self()->getUnits().end(); ++ it) {
+	for(UnitSet::const_iterator it = BWAPI::Broodwar->self()->getUnits().begin(); it != BWAPI::Broodwar->self()->getUnits().end(); ++ it) {
       int id = (*it)->getID();
       std::map<int, BWAPI::Position>::const_iterator it2 = lastCommandPosition.find(id);
       if (it2 != lastCommandPosition.end()) {
@@ -174,13 +176,13 @@ struct TournamentModuleManager {
         lastCommandTarget[id] = (*it)->getTarget()->getID();
       lastCommandType[id] = (*it)->getOrder().getID();
     }
-#endif
-    if (BWAPI::Broodwar->getFrameCount() % 20 == 19) {
+
+	if (BWAPI::Broodwar->getFrameCount() % 24 == 23) {
       // Write game data to file
       frametimes
         << BWAPI::Broodwar->getFrameCount() + 1 << ","
         << maxFrameTime << ","
-        << frameTimeSum / 20.f << ","
+        << frameTimeSum / 24.f << ","
         << num_actions << ","
         << BWAPI::Broodwar->self()->gatheredMinerals() - minerals_gathered << ","
         << BWAPI::Broodwar->self()->spentMinerals() - minerals_spent << ","
