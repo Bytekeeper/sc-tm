@@ -10,7 +10,8 @@ Global
 		Debug 4|x86 = Debug 4|x86
 		Release 3|x86 = Release 3|x86
 		Release 4.1.2|x86 = Release 4.1.2|x86
-		Release 4|x86 = Release 4|x86
+		Release 4.2|x86 = Release 4.2|x86
+		Release 4.3|x86 = Release 4.3|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{5215402F-9E62-407A-9007-537D350DF9EE}.Debug 4|x86.ActiveCfg = Release 4.2.0|Win32
@@ -19,8 +20,10 @@ Global
 		{5215402F-9E62-407A-9007-537D350DF9EE}.Release 3|x86.Build.0 = Release 3.7.5|Win32
 		{5215402F-9E62-407A-9007-537D350DF9EE}.Release 4.1.2|x86.ActiveCfg = Release 4.1.2|Win32
 		{5215402F-9E62-407A-9007-537D350DF9EE}.Release 4.1.2|x86.Build.0 = Release 4.1.2|Win32
-		{5215402F-9E62-407A-9007-537D350DF9EE}.Release 4|x86.ActiveCfg = Release 4.2.0|Win32
-		{5215402F-9E62-407A-9007-537D350DF9EE}.Release 4|x86.Build.0 = Release 4.2.0|Win32
+		{5215402F-9E62-407A-9007-537D350DF9EE}.Release 4.2|x86.ActiveCfg = Release 4.2.0|Win32
+		{5215402F-9E62-407A-9007-537D350DF9EE}.Release 4.2|x86.Build.0 = Release 4.2.0|Win32
+		{5215402F-9E62-407A-9007-537D350DF9EE}.Release 4.3|x86.ActiveCfg = Release 4.3|Win32
+		{5215402F-9E62-407A-9007-537D350DF9EE}.Release 4.3|x86.Build.0 = Release 4.3|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
