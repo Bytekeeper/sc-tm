@@ -221,7 +221,7 @@ struct TournamentModuleManager {
 		  << eventName << ","
 		  << BoolName(unit->getPlayer() == BWAPI::Broodwar->self()) << ","
 		  << unit->getID() << ","
-		  << unit->getType() << ","
+		  << unit->getType().getName() << ","
 		  << "\"" << unit->getPosition() << "\""
 		  << "\n"
 		  << std::flush;
