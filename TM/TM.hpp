@@ -23,9 +23,11 @@ using Duration = std::chrono::duration<float, std::milli>;
 using BWAPIPlayer = BWAPI::Player;
 using TournamentAction = BWAPI::Tournament::ActionID;
 using UnitSet = BWAPI::Unitset;
+using Unit = BWAPI::Unit;
 #elif BWAPI3
 typedef enum { Eliminated, Crash } WinReason;
 typedef enum { Self, Enemy } Winner;
+typedef BWAPI::Unit *Unit;
 #define WR 
 #define Wn 
 #define _NOEXCEPT
@@ -68,6 +70,7 @@ void PrintVar(std::ofstream &os, const char *name, const T &var, const char *pos
 
 const std::string log_results_file = Envvar("TM_LOG_RESULTS");
 const std::string log_frametimes_file = Envvar("TM_LOG_FRAMETIMES");
+const std::string log_events_file = Envvar("TM_LOG_EVENTS");
 const bool allow_user_input = (Envvar("TM_ALLOW_USER_INPUT").compare("1") == 0);
 const int speed_override = std::atoi(Envvar("TM_SPEED_OVERRIDE").c_str());
 const int time_out_at_frame = std::atoi(Envvar("TM_TIME_OUT_AT_FRAME").c_str());
@@ -90,6 +93,7 @@ struct TournamentModuleManager {
     TournamentModuleManager();
     frametimes.open(log_frametimes_file.c_str());
     frametimes << "frame_count,frame_time_max,frame_time_avg,num_actions,minerals_gathered,minerals_spent,gas_gathered,gas_spent,supply_used,supply_total\n";
+	events.open(log_events_file.c_str());
     BWAPI::Broodwar->setLocalSpeed(speed_override);
     lastFrameTimePoint = SteadyClock::now();
   }
@@ -202,6 +206,35 @@ struct TournamentModuleManager {
     }
   }
 
+  void onUnitComplete(Unit unit) {
+	  logUnitEvent(unit, "unitComplete");
+  }
+
+  void logUnitEvent(const Unit unit, std::string eventName) {
+	  frametimes
+		  << BWAPI::Broodwar->getFrameCount() + 1 << ","
+		  << eventName << ","
+		  << unit->getPlayer()->getID() << ","
+		  << unit->getType() << ","
+		  << "\"" << unit->getPosition() << "\""
+		  << std::flush;
+  }
+
+  void onUnitCreate(Unit unit) {
+	  if (unit->getPlayer()->getType() == BWAPI::PlayerTypes::Computer) {
+		  return;
+	  }
+	  logUnitEvent(unit, "unitCreate");
+  }
+
+  void onUnitDestroy(Unit unit) {
+	  logUnitEvent(unit, "unitDestroy");
+  }
+
+  void onUnitMorph(Unit unit) {
+	  logUnitEvent(unit, "unitMorph");
+  }
+
   WinReason win_reason;
   Winner winner;
   bool timed_out;
@@ -210,6 +243,7 @@ struct TournamentModuleManager {
   int razing_score;
   int unit_score;
   std::ofstream frametimes;
+  std::ofstream events;
   TimePoint lastFrameTimePoint;
   float maxFrameTime;
   float frameTimeSum;
@@ -235,6 +269,11 @@ struct TournamentModuleManager {
     void onStart() override { tm.onReset(); }
     void onFrame() override { tm.onFrame(); }
     void onEnd(bool didWin) override { tm.onEnd(didWin); }
+
+	void onUnitComplete(Unit unit) { tm.onUnitComplete(unit); }
+	void onUnitCreate(Unit unit) { tm.onUnitCreate(unit); }
+	void onUnitDestroy(Unit unit) { tm.onUnitDestroy(unit); }
+	void onUnitMorph(Unit unit) { tm.onUnitMorph(unit); }
   };
 
   TournamentBot *bot;
