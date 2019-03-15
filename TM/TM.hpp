@@ -94,6 +94,8 @@ struct TournamentModuleManager {
     frametimes.open(log_frametimes_file.c_str());
     frametimes << "frame_count,frame_time_max,frame_time_avg,num_actions,minerals_gathered,minerals_spent,gas_gathered,gas_spent,supply_used,supply_total\n";
 	events.open(log_events_file.c_str());
+    events << "frame_number,event_type,player_id,unit_id,unit_type,unit_position\n";
+
     BWAPI::Broodwar->setLocalSpeed(speed_override);
     lastFrameTimePoint = SteadyClock::now();
   }
@@ -207,21 +209,26 @@ struct TournamentModuleManager {
   }
 
   void onUnitComplete(Unit unit) {
+	  if (unit->getPlayer()->getType() != BWAPI::PlayerTypes::Player) {
+		  return;
+	  }
 	  logUnitEvent(unit, "unitComplete");
   }
 
   void logUnitEvent(const Unit unit, std::string eventName) {
-	  frametimes
+	  events
 		  << BWAPI::Broodwar->getFrameCount() + 1 << ","
 		  << eventName << ","
 		  << unit->getPlayer()->getID() << ","
+		  << unit->getID() << ","
 		  << unit->getType() << ","
 		  << "\"" << unit->getPosition() << "\""
+		  << "\n"
 		  << std::flush;
   }
 
   void onUnitCreate(Unit unit) {
-	  if (unit->getPlayer()->getType() == BWAPI::PlayerTypes::Computer) {
+	  if (unit->getPlayer()->getType() != BWAPI::PlayerTypes::Player) {
 		  return;
 	  }
 	  logUnitEvent(unit, "unitCreate");
