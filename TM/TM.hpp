@@ -24,6 +24,7 @@ using BWAPIPlayer = BWAPI::Player;
 using TournamentAction = BWAPI::Tournament::ActionID;
 using UnitSet = BWAPI::Unitset;
 using Unit = BWAPI::Unit;
+
 #elif BWAPI3
 typedef enum { Eliminated, Crash } WinReason;
 typedef enum { Self, Enemy } Winner;
@@ -37,6 +38,11 @@ typedef boost::chrono::duration<float, boost::milli> Duration;
 typedef BWAPI::Player *BWAPIPlayer;
 typedef int TournamentAction;
 typedef std::set<BWAPI::Unit*> UnitSet;
+
+std::ostream &operator<<(std::ostream &os, const BWAPI::Position &pt) {
+	return os << '(' << pt.x() << ',' << pt.y() << ')';
+}
+
 #endif
 
 struct TournamentModuleManager;
